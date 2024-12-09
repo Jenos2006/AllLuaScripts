@@ -73,7 +73,7 @@ local function toggleInfinite()
     if infiniteGiving then
         infiniteLoop = task.spawn(function()
             while infiniteGiving do
-                sendMoney(999e9) -- Unendliches Geld
+                sendMoney(999e99) -- Unendliches Geld
                 task.wait()
             end
         end)
