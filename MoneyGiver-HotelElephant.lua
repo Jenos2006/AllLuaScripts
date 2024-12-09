@@ -29,7 +29,7 @@ UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = Frame
 
 local Title = Instance.new("TextLabel")
-Title.Text = "Money Giver by Jenos2006"
+Title.Text = "Money! v1.2 by Jenos2006"
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 20
 Title.TextColor3 = Color3.new(1, 1, 1)
@@ -74,7 +74,7 @@ local function toggleInfinite()
         infiniteLoop = task.spawn(function()
             while infiniteGiving do
                 sendMoney(999e9) -- Unendliches Geld
-                task.wait(0.1)
+                task.wait()
             end
         end)
     else
