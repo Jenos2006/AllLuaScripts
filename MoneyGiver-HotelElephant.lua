@@ -1,6 +1,9 @@
 -- the script is fire
 
-local main
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Jenos2006/AllLuaScripts/refs/heads/main/Notify.lua"))()
+ 
+
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -84,3 +87,5 @@ createButton("Button1000", "1.000$", 0.35, function() sendMoney(1000) end)
 createButton("Button100000", "100.000$", 0.5, function() sendMoney(100000) end)
 createButton("Button1000000", "1.000.000$", 0.65, function() sendMoney(1000000) end)
 createButton("ButtonInfinity", "Infinity (Press again to Stop)", 0.8, toggleInfinite)
+
+notify("Script loaded!", "Script by Jenos2006!", 3)
