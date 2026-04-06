@@ -236,6 +236,14 @@ CreditTab:CreateButton({
 local ExtraTab = Window:CreateTab("Extras")
 
 ExtraTab:CreateButton({
+    Name = "Fly GUI",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Jenos2006/AllLuaScripts/refs/heads/main/FlyGUI.lua"))()
+        playSound("12221967")
+    end
+})
+
+ExtraTab:CreateButton({
     Name = "No Fall Damage",
     Callback = function()
         local runsvc = game:GetService("RunService")
