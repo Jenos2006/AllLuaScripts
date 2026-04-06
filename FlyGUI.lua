@@ -10,7 +10,7 @@ local DragFrame = Instance.new("Frame")
 local UIGradient = Instance.new("UIGradient")
 
 main.Name = "main"
-main.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+main.Parent = game.CoreGui
 main.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 main.IgnoreGuiInset = true
 
@@ -149,6 +149,7 @@ end)
 speeds = 1
 local speaker = game:GetService("Players").LocalPlayer
 nowe = false
+tpwalking = false
 
 local function updateFlyState()
     if nowe == true then
@@ -160,15 +161,29 @@ local function updateFlyState()
     end
 end
 
-onof.MouseButton1Down:connect(function()
-    if nowe == true then
+local function stopFly()
+    if nowe then
         nowe = false
         updateFlyState()
+        tpwalking = false
         
-        for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
-            speaker.Character.Humanoid:SetStateEnabled(state, true)
+        if speaker.Character and speaker.Character:FindFirstChildOfClass("Humanoid") then
+            for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+                speaker.Character.Humanoid:SetStateEnabled(state, true)
+            end
+            speaker.Character.Humanoid:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+            speaker.Character.Humanoid.PlatformStand = false
         end
-        speaker.Character.Humanoid:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+        
+        if speaker.Character and speaker.Character:FindFirstChild("Animate") then
+            speaker.Character.Animate.Disabled = false
+        end
+    end
+end
+
+onof.MouseButton1Down:connect(function()
+    if nowe == true then
+        stopFly()
     else 
         nowe = true
         updateFlyState()
@@ -187,14 +202,16 @@ onof.MouseButton1Down:connect(function()
             end)
         end
         
-        if game.Players.LocalPlayer.Character:FindFirstChild("Animate") then
+        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Animate") then
             game.Players.LocalPlayer.Character.Animate.Disabled = true
         end
         
-        for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
-            speaker.Character.Humanoid:SetStateEnabled(state, false)
+        if speaker.Character and speaker.Character:FindFirstChildOfClass("Humanoid") then
+            for _, state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+                speaker.Character.Humanoid:SetStateEnabled(state, false)
+            end
+            speaker.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
         end
-        speaker.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Swimming)
     end
     
     local plr = game.Players.LocalPlayer
@@ -213,7 +230,7 @@ onof.MouseButton1Down:connect(function()
     bv.velocity = Vector3.new(0,0.1,0)
     bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
     
-    if nowe == true then
+    if nowe == true and plr.Character then
         plr.Character.Humanoid.PlatformStand = true
     end
     
@@ -285,14 +302,16 @@ end)
 
 game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function(char)
     wait(0.7)
+    nowe = false
+    tpwalking = false
+    updateFlyState()
+    
     if char and char:FindFirstChildOfClass("Humanoid") then
         char.Humanoid.PlatformStand = false
     end
     if char and char:FindFirstChild("Animate") then
         char.Animate.Disabled = false
     end
-    nowe = false
-    updateFlyState()
 end)
 
 plus.MouseButton1Down:connect(function()
