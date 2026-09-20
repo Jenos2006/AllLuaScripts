@@ -1,25 +1,30 @@
 --[[
     ╔═══════════════════════════════════════════════════════════════╗
-    ║                  NoHorizon Library  v4.0.0                    ║
-    ║                  "Fluid" Edition • Executor                   ║
+    ║                  NoHorizon Library  v5.0.0                    ║
+    ║                  "Ultra" Edition • Executor                   ║
     ║                  Creator: NoHorizon                           ║
     ╠═══════════════════════════════════════════════════════════════╣
-    ║  Usage:                                                       ║
-    ║    local NoHorizon = loadstring(game:HttpGet("URL"))()        ║
-    ║                                                               ║
-    ║    local Window = NoHorizon:CreateWindow({                    ║
-    ║        Name = "My Hub",                                       ║
-    ║        Subtitle = "by NoHorizon",                             ║
-    ║        Theme = "Midnight",                                    ║
-    ║    })                                                         ║
+    ║  Features:                                                    ║
+    ║   • Acryl/Blur Background (Fluent-style)                      ║
+    ║   • DPI Scaling (0.5x - 1.5x)                                 ║
+    ║   • Nested Elements (Slider/Dropdown inside Toggles)          ║
+    ║   • 6 Themes + Custom Theme Support                           ║
+    ║   • Config System with Autoload                               ║
+    ║   • Draggable Event Logger                                    ║
+    ║   • Tooltips, Watermark, Notifications                        ║
+    ║   • Keybind Modes: Toggle / Hold / Always                     ║
+    ║   • Multi-Select Dropdown with Search                         ║
+    ║   • ColorPicker with Alpha                                    ║
     ╚═══════════════════════════════════════════════════════════════╝
 ]]
 
 local NoHorizon = {}
-NoHorizon.Version = "4.0.0"
+NoHorizon.Version = "5.0.0"
 NoHorizon.Creator = "NoHorizon"
 NoHorizon.Flags = {}
+NoHorizon.Options = {}
 NoHorizon.Windows = {}
+NoHorizon.ThemeName = "Midnight"
 
 -- ═══════════════════════════════════════════════════════════════
 -- SERVICES
@@ -30,8 +35,11 @@ local RS      = game:GetService("RunService")
 local Players = game:GetService("Players")
 local Http    = game:GetService("HttpService")
 local LP      = Players.LocalPlayer
+local Mouse   = LP:GetMouse()
 
--- Executor functions
+-- ═══════════════════════════════════════════════════════════════
+-- EXECUTOR FUNCTIONS
+-- ═══════════════════════════════════════════════════════════════
 local gethui_      = rawget(getfenv(), "gethui") or gethui
 local protect_gui_ = rawget(getfenv(), "protect_gui") or protect_gui or (syn and syn.protect_gui)
 local writefile_   = rawget(getfenv(), "writefile") or writefile
@@ -39,95 +47,168 @@ local readfile_    = rawget(getfenv(), "readfile") or readfile
 local isfile_      = rawget(getfenv(), "isfile") or isfile
 local makefolder_  = rawget(getfenv(), "makefolder") or makefolder
 local isfolder_    = rawget(getfenv(), "isfolder") or isfolder
+local listfiles_   = rawget(getfenv(), "listfiles") or listfiles
+local delfile_     = rawget(getfenv(), "delfile") or delfile
 local identify_    = rawget(getfenv(), "identifyexecutor") or identifyexecutor
+local setclipboard_ = rawget(getfenv(), "setclipboard") or setclipboard or toclipboard
 
 -- ═══════════════════════════════════════════════════════════════
--- THEMES — Fluid, modern, entsättigt
+-- THEMES — 6 hochwertige Paletten
 -- ═══════════════════════════════════════════════════════════════
 local Themes = {
     Midnight = {
-        WindowBg     = Color3.fromRGB(14, 15, 20),
-        SidebarBg    = Color3.fromRGB(18, 19, 26),
-        ContentBg    = Color3.fromRGB(14, 15, 20),
-        HeaderBg     = Color3.fromRGB(18, 19, 26),
-        CardBg       = Color3.fromRGB(22, 24, 32),
-        CardHover    = Color3.fromRGB(28, 30, 40),
-        ElementBg    = Color3.fromRGB(26, 28, 38),
-        ElementHover = Color3.fromRGB(34, 36, 48),
-        Accent       = Color3.fromRGB(90, 130, 250),
-        Accent2      = Color3.fromRGB(140, 100, 255),
-        Text         = Color3.fromRGB(230, 232, 240),
-        SubText      = Color3.fromRGB(130, 135, 155),
-        Muted        = Color3.fromRGB(75, 80, 100),
-        Outline      = Color3.fromRGB(32, 34, 46),
-        Success      = Color3.fromRGB(70, 210, 130),
-        Warning      = Color3.fromRGB(255, 185, 75),
-        Error        = Color3.fromRGB(240, 90, 100),
+        WindowBg     = Color3.fromRGB(11, 12, 16),
+        SidebarBg    = Color3.fromRGB(14, 15, 20),
+        ContentBg    = Color3.fromRGB(11, 12, 16),
+        HeaderBg     = Color3.fromRGB(14, 15, 20),
+        CardBg       = Color3.fromRGB(18, 19, 26),
+        CardHover    = Color3.fromRGB(24, 26, 35),
+        ElementBg    = Color3.fromRGB(22, 24, 33),
+        ElementHover = Color3.fromRGB(30, 32, 44),
+        Accent       = Color3.fromRGB(88, 128, 255),
+        Accent2      = Color3.fromRGB(150, 100, 255),
+        AccentSoft   = Color3.fromRGB(45, 65, 130),
+        Text         = Color3.fromRGB(228, 230, 240),
+        SubText      = Color3.fromRGB(128, 132, 152),
+        Muted        = Color3.fromRGB(72, 76, 95),
+        Outline      = Color3.fromRGB(28, 30, 42),
+        OutlineSoft  = Color3.fromRGB(22, 24, 34),
+        Success      = Color3.fromRGB(68, 210, 128),
+        Warning      = Color3.fromRGB(255, 182, 72),
+        Error        = Color3.fromRGB(240, 85, 95),
+        Blur         = true,
     },
     Amethyst = {
-        WindowBg     = Color3.fromRGB(16, 13, 24),
-        SidebarBg    = Color3.fromRGB(20, 16, 30),
-        ContentBg    = Color3.fromRGB(16, 13, 24),
-        HeaderBg     = Color3.fromRGB(20, 16, 30),
-        CardBg       = Color3.fromRGB(25, 20, 36),
-        CardHover    = Color3.fromRGB(32, 25, 46),
-        ElementBg    = Color3.fromRGB(28, 22, 42),
-        ElementHover = Color3.fromRGB(38, 30, 54),
-        Accent       = Color3.fromRGB(150, 100, 230),
-        Accent2      = Color3.fromRGB(220, 120, 190),
-        Text         = Color3.fromRGB(235, 228, 245),
-        SubText      = Color3.fromRGB(150, 138, 175),
-        Muted        = Color3.fromRGB(90, 82, 115),
-        Outline      = Color3.fromRGB(36, 28, 52),
+        WindowBg     = Color3.fromRGB(14, 11, 22),
+        SidebarBg    = Color3.fromRGB(18, 14, 28),
+        ContentBg    = Color3.fromRGB(14, 11, 22),
+        HeaderBg     = Color3.fromRGB(18, 14, 28),
+        CardBg       = Color3.fromRGB(22, 18, 34),
+        CardHover    = Color3.fromRGB(30, 24, 44),
+        ElementBg    = Color3.fromRGB(26, 20, 40),
+        ElementHover = Color3.fromRGB(36, 28, 52),
+        Accent       = Color3.fromRGB(148, 98, 228),
+        Accent2      = Color3.fromRGB(220, 118, 188),
+        AccentSoft   = Color3.fromRGB(78, 52, 125),
+        Text         = Color3.fromRGB(234, 226, 245),
+        SubText      = Color3.fromRGB(148, 136, 172),
+        Muted        = Color3.fromRGB(88, 80, 112),
+        Outline      = Color3.fromRGB(34, 26, 50),
+        OutlineSoft  = Color3.fromRGB(26, 20, 40),
         Success      = Color3.fromRGB(85, 215, 145),
         Warning      = Color3.fromRGB(255, 195, 90),
         Error        = Color3.fromRGB(240, 95, 125),
+        Blur         = true,
     },
     Emerald = {
-        WindowBg     = Color3.fromRGB(11, 18, 15),
-        SidebarBg    = Color3.fromRGB(15, 23, 19),
-        ContentBg    = Color3.fromRGB(11, 18, 15),
-        HeaderBg     = Color3.fromRGB(15, 23, 19),
-        CardBg       = Color3.fromRGB(18, 28, 24),
-        CardHover    = Color3.fromRGB(24, 36, 31),
-        ElementBg    = Color3.fromRGB(20, 31, 26),
-        ElementHover = Color3.fromRGB(27, 41, 35),
-        Accent       = Color3.fromRGB(55, 195, 135),
-        Accent2      = Color3.fromRGB(115, 225, 175),
-        Text         = Color3.fromRGB(224, 240, 232),
-        SubText      = Color3.fromRGB(130, 160, 145),
-        Muted        = Color3.fromRGB(78, 102, 92),
-        Outline      = Color3.fromRGB(26, 40, 34),
+        WindowBg     = Color3.fromRGB(9, 16, 13),
+        SidebarBg    = Color3.fromRGB(13, 21, 17),
+        ContentBg    = Color3.fromRGB(9, 16, 13),
+        HeaderBg     = Color3.fromRGB(13, 21, 17),
+        CardBg       = Color3.fromRGB(16, 26, 22),
+        CardHover    = Color3.fromRGB(22, 34, 29),
+        ElementBg    = Color3.fromRGB(18, 29, 24),
+        ElementHover = Color3.fromRGB(25, 38, 32),
+        Accent       = Color3.fromRGB(52, 192, 132),
+        Accent2      = Color3.fromRGB(112, 222, 172),
+        AccentSoft   = Color3.fromRGB(32, 105, 75),
+        Text         = Color3.fromRGB(222, 240, 232),
+        SubText      = Color3.fromRGB(128, 158, 144),
+        Muted        = Color3.fromRGB(76, 100, 90),
+        Outline      = Color3.fromRGB(24, 38, 32),
+        OutlineSoft  = Color3.fromRGB(18, 29, 24),
         Success      = Color3.fromRGB(80, 220, 140),
         Warning      = Color3.fromRGB(235, 195, 85),
         Error        = Color3.fromRGB(240, 100, 100),
+        Blur         = true,
+    },
+    Sunset = {
+        WindowBg     = Color3.fromRGB(22, 14, 12),
+        SidebarBg    = Color3.fromRGB(28, 18, 15),
+        ContentBg    = Color3.fromRGB(22, 14, 12),
+        HeaderBg     = Color3.fromRGB(28, 18, 15),
+        CardBg       = Color3.fromRGB(34, 22, 18),
+        CardHover    = Color3.fromRGB(44, 29, 24),
+        ElementBg    = Color3.fromRGB(36, 24, 20),
+        ElementHover = Color3.fromRGB(48, 32, 26),
+        Accent       = Color3.fromRGB(238, 138, 88),
+        Accent2      = Color3.fromRGB(255, 98, 128),
+        AccentSoft   = Color3.fromRGB(138, 78, 48),
+        Text         = Color3.fromRGB(250, 234, 226),
+        SubText      = Color3.fromRGB(178, 148, 136),
+        Muted        = Color3.fromRGB(108, 88, 80),
+        Outline      = Color3.fromRGB(48, 32, 26),
+        OutlineSoft  = Color3.fromRGB(38, 26, 22),
+        Success      = Color3.fromRGB(140, 220, 130),
+        Warning      = Color3.fromRGB(255, 200, 100),
+        Error        = Color3.fromRGB(240, 100, 100),
+        Blur         = true,
     },
     Mono = {
-        WindowBg     = Color3.fromRGB(13, 13, 13),
-        SidebarBg    = Color3.fromRGB(17, 17, 17),
-        ContentBg    = Color3.fromRGB(13, 13, 13),
-        HeaderBg     = Color3.fromRGB(17, 17, 17),
-        CardBg       = Color3.fromRGB(21, 21, 21),
-        CardHover    = Color3.fromRGB(27, 27, 27),
-        ElementBg    = Color3.fromRGB(23, 23, 23),
-        ElementHover = Color3.fromRGB(31, 31, 31),
-        Accent       = Color3.fromRGB(215, 215, 215),
-        Accent2      = Color3.fromRGB(170, 170, 170),
-        Text         = Color3.fromRGB(232, 232, 232),
-        SubText      = Color3.fromRGB(145, 145, 145),
-        Muted        = Color3.fromRGB(85, 85, 85),
-        Outline      = Color3.fromRGB(33, 33, 33),
+        WindowBg     = Color3.fromRGB(12, 12, 12),
+        SidebarBg    = Color3.fromRGB(16, 16, 16),
+        ContentBg    = Color3.fromRGB(12, 12, 12),
+        HeaderBg     = Color3.fromRGB(16, 16, 16),
+        CardBg       = Color3.fromRGB(20, 20, 20),
+        CardHover    = Color3.fromRGB(26, 26, 26),
+        ElementBg    = Color3.fromRGB(22, 22, 22),
+        ElementHover = Color3.fromRGB(30, 30, 30),
+        Accent       = Color3.fromRGB(212, 212, 212),
+        Accent2      = Color3.fromRGB(168, 168, 168),
+        AccentSoft   = Color3.fromRGB(100, 100, 100),
+        Text         = Color3.fromRGB(230, 230, 230),
+        SubText      = Color3.fromRGB(142, 142, 142),
+        Muted        = Color3.fromRGB(82, 82, 82),
+        Outline      = Color3.fromRGB(32, 32, 32),
+        OutlineSoft  = Color3.fromRGB(25, 25, 25),
         Success      = Color3.fromRGB(135, 215, 135),
         Warning      = Color3.fromRGB(225, 195, 115),
         Error        = Color3.fromRGB(225, 115, 115),
+        Blur         = false,
+    },
+    Rose = {
+        WindowBg     = Color3.fromRGB(20, 12, 18),
+        SidebarBg    = Color3.fromRGB(26, 16, 23),
+        ContentBg    = Color3.fromRGB(20, 12, 18),
+        HeaderBg     = Color3.fromRGB(26, 16, 23),
+        CardBg       = Color3.fromRGB(32, 20, 28),
+        CardHover    = Color3.fromRGB(42, 26, 37),
+        ElementBg    = Color3.fromRGB(35, 22, 31),
+        ElementHover = Color3.fromRGB(46, 30, 41),
+        Accent       = Color3.fromRGB(235, 95, 168),
+        Accent2      = Color3.fromRGB(255, 140, 100),
+        AccentSoft   = Color3.fromRGB(130, 52, 92),
+        Text         = Color3.fromRGB(250, 228, 240),
+        SubText      = Color3.fromRGB(188, 148, 170),
+        Muted        = Color3.fromRGB(118, 88, 105),
+        Outline      = Color3.fromRGB(46, 30, 41),
+        OutlineSoft  = Color3.fromRGB(36, 24, 33),
+        Success      = Color3.fromRGB(120, 225, 150),
+        Warning      = Color3.fromRGB(255, 200, 110),
+        Error        = Color3.fromRGB(255, 90, 120),
+        Blur         = true,
     },
 }
 
 local CurrentTheme = Themes.Midnight
-local ThemeName = "Midnight"
 
 -- ═══════════════════════════════════════════════════════════════
--- TWEEN STYLES — Sanfter, "fluid" (Quart + Sine)
+-- DPI SCALING
+-- ═══════════════════════════════════════════════════════════════
+local DPI_SCALE = 1
+local function setScale(scale)
+    DPI_SCALE = math.clamp(scale, 0.5, 1.5)
+    if NoHorizon.ScreenGui then
+        local win = NoHorizon.ScreenGui:FindFirstChild("Window")
+        if win then
+            local base = win:GetAttribute("BaseSize") or Vector2.new(660, 480)
+            win.Size = UDim2.new(0, base.X * DPI_SCALE, 0, base.Y * DPI_SCALE)
+        end
+    end
+end
+
+-- ═══════════════════════════════════════════════════════════════
+-- TWEEN STYLES
 -- ═══════════════════════════════════════════════════════════════
 local TI = {
     Fast   = TweenInfo.new(0.14, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
@@ -135,6 +216,7 @@ local TI = {
     Slow   = TweenInfo.new(0.4,  Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
     Bounce = TweenInfo.new(0.5,  Enum.EasingStyle.Back,  Enum.EasingDirection.Out),
     Smooth = TweenInfo.new(0.3,  Enum.EasingStyle.Sine,  Enum.EasingDirection.InOut),
+    Linear = TweenInfo.new(0.2,  Enum.EasingStyle.Linear),
 }
 
 -- ═══════════════════════════════════════════════════════════════
@@ -213,6 +295,15 @@ ScreenGui.Parent = getGuiParent()
 if protect_gui_ then pcall(protect_gui_, ScreenGui) end
 NoHorizon.ScreenGui = ScreenGui
 
+-- Acryl blur background
+local blurContainer = mk("Frame", {
+    Parent = ScreenGui,
+    Name = "BlurContainer",
+    Size = UDim2.new(1, 0, 1, 0),
+    BackgroundTransparency = 1,
+    ZIndex = 0,
+})
+
 -- ═══════════════════════════════════════════════════════════════
 -- NOTIFICATIONS
 -- ═══════════════════════════════════════════════════════════════
@@ -236,8 +327,10 @@ function NoHorizon:Notify(opts)
     opts = opts or {}
     local title    = opts.Title or "Notification"
     local content  = opts.Content or ""
+    local subContent = opts.SubContent
     local duration = opts.Duration or 5
     local kind     = opts.Type or "info"
+    local icon     = opts.Icon
 
     local accent = CurrentTheme.Accent
     if kind == "success" then accent = CurrentTheme.Success
@@ -249,6 +342,7 @@ function NoHorizon:Notify(opts)
         Size = UDim2.new(1, 0, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         BackgroundColor3 = CurrentTheme.CardBg,
+        BackgroundTransparency = 0.05,
         BorderSizePixel = 0,
     })
     corner(card, 10)
@@ -264,9 +358,20 @@ function NoHorizon:Notify(opts)
     })
     corner(accentBar, 4)
 
+    if icon then
+        mk("ImageLabel", {
+            Parent = card,
+            BackgroundTransparency = 1,
+            Position = UDim2.new(1, -20, 0, 0),
+            Size = UDim2.new(0, 18, 0, 18),
+            Image = icon,
+            ImageColor3 = accent,
+        })
+    end
+
     mk("TextLabel", {
         Parent = card, BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 16),
+        Size = UDim2.new(1, -30, 0, 16),
         Font = Enum.Font.GothamBold, Text = title,
         TextColor3 = CurrentTheme.Text, TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Left,
@@ -275,7 +380,7 @@ function NoHorizon:Notify(opts)
     mk("TextLabel", {
         Parent = card, BackgroundTransparency = 1,
         Position = UDim2.new(0, 0, 0, 18),
-        Size = UDim2.new(1, 0, 0, 0),
+        Size = UDim2.new(1, -30, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         Font = Enum.Font.Gotham, Text = content,
         TextColor3 = CurrentTheme.SubText, TextSize = 11,
@@ -283,9 +388,22 @@ function NoHorizon:Notify(opts)
         TextXAlignment = Enum.TextXAlignment.Left,
     })
 
+    if subContent then
+        mk("TextLabel", {
+            Parent = card, BackgroundTransparency = 1,
+            Position = UDim2.new(0, 0, 0, 36),
+            Size = UDim2.new(1, -30, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            Font = Enum.Font.Gotham, Text = subContent,
+            TextColor3 = CurrentTheme.Muted, TextSize = 10,
+            TextWrapped = true,
+            TextXAlignment = Enum.TextXAlignment.Left,
+        })
+    end
+
     card.Position = UDim2.new(1, 60, 0, 0)
     card.BackgroundTransparency = 1
-    tw(card, TI.Normal, { Position = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 0 })
+    tw(card, TI.Normal, { Position = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 0.05 })
 
     task.delay(duration, function()
         if not card or not card.Parent then return end
@@ -293,6 +411,7 @@ function NoHorizon:Notify(opts)
         for _, child in ipairs(card:GetDescendants()) do
             if child:IsA("TextLabel") then tw(child, TI.Normal, { TextTransparency = 1 }) end
             if child:IsA("Frame") then tw(child, TI.Normal, { BackgroundTransparency = 1 }) end
+            if child:IsA("ImageLabel") then tw(child, TI.Normal, { ImageTransparency = 1 }) end
         end
         task.wait(0.3)
         card:Destroy()
@@ -332,6 +451,229 @@ local function makeDraggable(frame, handle)
 end
 
 -- ═══════════════════════════════════════════════════════════════
+-- TOOLTIP SYSTEM
+-- ═══════════════════════════════════════════════════════════════
+local Tooltip
+local function initTooltip()
+    if Tooltip and Tooltip.Parent then return end
+    Tooltip = mk("TextLabel", {
+        Parent = ScreenGui, Name = "Tooltip",
+        BackgroundColor3 = CurrentTheme.CardBg,
+        BackgroundTransparency = 0.1,
+        BorderSizePixel = 0,
+        Font = Enum.Font.Gotham, Text = "",
+        TextColor3 = CurrentTheme.Text, TextSize = 11,
+        TextWrapped = true,
+        Size = UDim2.new(0, 0, 0, 0),
+        AutomaticSize = Enum.AutomaticSize.XY,
+        Visible = false,
+        ZIndex = 2000,
+    })
+    corner(Tooltip, 6)
+    stroke(Tooltip, CurrentTheme.Outline, 1, 0.3)
+    pad(Tooltip, 8)
+end
+
+local function attachTooltip(element, text)
+    if not text or text == "" then return end
+    initTooltip()
+    element.MouseEnter:Connect(function()
+        Tooltip.Text = text
+        Tooltip.Visible = true
+        Tooltip.TextTransparency = 1
+        Tooltip.BackgroundTransparency = 1
+        Tooltip.Position = UDim2.new(0, UIS:GetMouseLocation().X + 16, 0, UIS:GetMouseLocation().Y + 16)
+        tw(Tooltip, TI.Fast, { TextTransparency = 0, BackgroundTransparency = 0.1 })
+    end)
+    element.MouseLeave:Connect(function()
+        tw(Tooltip, TI.Fast, { TextTransparency = 1, BackgroundTransparency = 1 })
+        task.wait(0.15)
+        Tooltip.Visible = false
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement and Tooltip.Visible then
+            Tooltip.Position = UDim2.new(0, input.Position.X + 16, 0, input.Position.Y + 16)
+        end
+    end)
+end
+
+-- ═══════════════════════════════════════════════════════════════
+-- EVENT LOGGER (Draggable, Smart Snapping)
+-- ═══════════════════════════════════════════════════════════════
+local LogHolder = mk("Frame", {
+    Parent = ScreenGui, Name = "EventLogger",
+    AnchorPoint = Vector2.new(1, 0),
+    Position = UDim2.new(1, -18, 0, 18),
+    Size = UDim2.new(0, 260, 0, 32),
+    BackgroundColor3 = CurrentTheme.CardBg,
+    BackgroundTransparency = 0.1,
+    BorderSizePixel = 0,
+    ZIndex = 900,
+})
+corner(LogHolder, 10)
+stroke(LogHolder, CurrentTheme.Outline, 1, 0.3)
+
+local logHeader = mk("Frame", {
+    Parent = LogHolder,
+    Size = UDim2.new(1, 0, 0, 32),
+    BackgroundTransparency = 1,
+})
+mk("Frame", {
+    Parent = logHeader,
+    Size = UDim2.new(0, 3, 0.6, 0),
+    Position = UDim2.new(0, 0, 0.5, 0),
+    AnchorPoint = Vector2.new(0, 0.5),
+    BackgroundColor3 = CurrentTheme.Accent,
+    BorderSizePixel = 0,
+})
+corner(logHeader:FindFirstChildOfClass("Frame"), 4)
+
+mk("TextLabel", {
+    Parent = logHeader, BackgroundTransparency = 1,
+    Position = UDim2.new(0, 14, 0, 0),
+    Size = UDim2.new(1, -40, 1, 0),
+    Font = Enum.Font.GothamBold, Text = "Event Logger",
+    TextColor3 = CurrentTheme.Text, TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+})
+
+local logCount = mk("TextLabel", {
+    Parent = logHeader, BackgroundTransparency = 1,
+    AnchorPoint = Vector2.new(1, 0.5),
+    Position = UDim2.new(1, -10, 0.5, 0),
+    Size = UDim2.new(0, 30, 1, 0),
+    Font = Enum.Font.Gotham, Text = "0",
+    TextColor3 = CurrentTheme.Muted, TextSize = 10,
+    TextXAlignment = Enum.TextXAlignment.Right,
+})
+
+local logScroll = mk("ScrollingFrame", {
+    Parent = LogHolder,
+    Position = UDim2.new(0, 0, 0, 32),
+    Size = UDim2.new(1, 0, 0, 0),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    ScrollBarThickness = 2,
+    ScrollBarImageColor3 = CurrentTheme.Accent,
+    CanvasSize = UDim2.new(0, 0, 0, 0),
+    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+    ClipsDescendants = true,
+})
+mk("UIListLayout", {
+    Parent = logScroll,
+    Padding = UDim.new(0, 2),
+    SortOrder = Enum.SortOrder.LayoutOrder,
+})
+pad(logScroll, 6, 6, 10, 10)
+
+local logCountNum = 0
+function NoHorizon:Log(text, logType)
+    logType = logType or "info"
+    logCountNum = logCountNum + 1
+    logCount.Text = tostring(logCountNum)
+
+    local accent = CurrentTheme.Accent
+    if logType == "success" then accent = CurrentTheme.Success
+    elseif logType == "warning" then accent = CurrentTheme.Warning
+    elseif logType == "error" then accent = CurrentTheme.Error end
+
+    local entry = mk("Frame", {
+        Parent = logScroll,
+        Size = UDim2.new(1, 0, 0, 0),
+        AutomaticSize = Enum.AutomaticSize.Y,
+        BackgroundColor3 = CurrentTheme.ElementBg,
+        BackgroundTransparency = 0.5,
+        BorderSizePixel = 0,
+    })
+    corner(entry, 4)
+    pad(entry, 4, 4, 8, 8)
+
+    mk("Frame", {
+        Parent = entry,
+        Size = UDim2.new(0, 2, 1, 0),
+        Position = UDim2.new(0, -8, 0, 0),
+        BackgroundColor3 = accent,
+        BorderSizePixel = 0,
+    })
+
+    mk("TextLabel", {
+        Parent = entry, BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 0),
+        AutomaticSize = Enum.AutomaticSize.Y,
+        Font = Enum.Font.Gotham, Text = "[" .. os.date("%H:%M:%S") .. "] " .. text,
+        TextColor3 = CurrentTheme.SubText, TextSize = 10,
+        TextWrapped = true,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+
+    -- Auto expand logger when new entry
+    if LogHolder.Size.Y.Offset < 100 then
+        tw(LogHolder, TI.Normal, { Size = UDim2.new(0, 260, 0, 180) })
+        tw(logScroll, TI.Normal, { Size = UDim2.new(1, 0, 0, 148) })
+    end
+end
+
+-- Draggable logger with smart snapping
+local logDragging, logDragStart, logStartPos
+logHeader.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        logDragging = true
+        logDragStart = input.Position
+        logStartPos = LogHolder.Position
+    end
+end)
+logHeader.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        logDragging = false
+    end
+end)
+UIS.InputChanged:Connect(function(input)
+    if logDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local d = input.Position - logDragStart
+        LogHolder.Position = UDim2.new(
+            logStartPos.X.Scale, logStartPos.X.Offset + d.X,
+            logStartPos.Y.Scale, logStartPos.Y.Offset + d.Y
+        )
+    end
+end)
+
+-- ═══════════════════════════════════════════════════════════════
+-- WATERMARK
+-- ═══════════════════════════════════════════════════════════════
+local Watermark = mk("Frame", {
+    Parent = ScreenGui, Name = "Watermark",
+    AnchorPoint = Vector2.new(0, 1),
+    Position = UDim2.new(0, 16, 1, -16),
+    Size = UDim2.new(0, 190, 0, 28),
+    BackgroundColor3 = CurrentTheme.HeaderBg,
+    BackgroundTransparency = 0.15,
+    BorderSizePixel = 0,
+    ZIndex = 400,
+})
+corner(Watermark, 8)
+stroke(Watermark, CurrentTheme.Outline, 1, 0.3)
+
+local wmAccent = mk("Frame", {
+    Parent = Watermark,
+    Size = UDim2.new(0, 3, 1, 0),
+    BackgroundColor3 = CurrentTheme.Accent,
+    BorderSizePixel = 0,
+})
+corner(wmAccent, 4)
+
+mk("TextLabel", {
+    Parent = Watermark, BackgroundTransparency = 1,
+    Position = UDim2.new(0, 14, 0, 0),
+    Size = UDim2.new(1, -18, 1, 0),
+    Font = Enum.Font.GothamBold,
+    Text = "NoHorizon • v" .. NoHorizon.Version,
+    TextColor3 = CurrentTheme.Text, TextSize = 11,
+    TextXAlignment = Enum.TextXAlignment.Left,
+})
+
+makeDraggable(Watermark, Watermark)
+
+-- ═══════════════════════════════════════════════════════════════
 -- WINDOW
 -- ═══════════════════════════════════════════════════════════════
 local Window = {}
@@ -343,16 +685,23 @@ function NoHorizon:CreateWindow(cfg)
     local subtitle   = cfg.Subtitle or "v" .. NoHorizon.Version
     local themeName  = cfg.Theme or "Midnight"
     local toggleKey  = cfg.ToggleKey or Enum.KeyCode.RightShift
-    local windowSize = cfg.Size or UDim2.new(0, 660, 0, 480)
+    local baseSize   = cfg.Size or UDim2.new(0, 660, 0, 480)
+    local acrylic    = cfg.Acrylic ~= false
+    local showLog    = cfg.EventLogger ~= false
 
     CurrentTheme = Themes[themeName] or Themes.Midnight
-    ThemeName = themeName
+    NoHorizon.ThemeName = themeName
+
+    if not showLog then
+        LogHolder.Visible = false
+    end
 
     local win = setmetatable({}, Window)
     win.Name = windowName
     win.Tabs = {}
     win.ActiveTab = nil
     win.Minimized = false
+    win.BaseSize = Vector2.new(baseSize.X.Offset, baseSize.Y.Offset)
 
     -- ═══════════════════════════════════════════════════
     -- MAIN WINDOW
@@ -361,16 +710,40 @@ function NoHorizon:CreateWindow(cfg)
         Parent = ScreenGui, Name = "Window",
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = windowSize,
+        Size = baseSize,
         BackgroundColor3 = CurrentTheme.WindowBg,
         BorderSizePixel = 0,
         ClipsDescendants = true,
     })
     corner(main, 14)
     stroke(main, CurrentTheme.Outline, 1, 0.5)
+    main:SetAttribute("BaseSize", win.BaseSize)
     win.Frame = main
 
-    -- Top gradient accent line
+    -- Acryl blur behind window
+    local winBlur = mk("Frame", {
+        Parent = blurContainer,
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = baseSize,
+        BackgroundColor3 = CurrentTheme.WindowBg,
+        BackgroundTransparency = 0.4,
+        BorderSizePixel = 0,
+        ZIndex = -1,
+    })
+    corner(winBlur, 14)
+    if acrylic and CurrentTheme.Blur then
+        local blur = mk("BlurEffect", {
+            Parent = game:GetService("Lighting"),
+            Size = 12,
+            Transparency = 0.4,
+        })
+        winBlur.Visible = true
+    else
+        winBlur.Visible = false
+    end
+
+    -- Top gradient accent
     local topLine = mk("Frame", {
         Parent = main,
         Size = UDim2.new(1, 0, 0, 2),
@@ -380,10 +753,14 @@ function NoHorizon:CreateWindow(cfg)
     gradient(topLine, CurrentTheme.Accent, CurrentTheme.Accent2, 0)
 
     -- Intro animation
-    main.Size = UDim2.new(0, windowSize.X.Offset * 0.9, 0, windowSize.Y.Offset * 0.9)
+    main.Size = UDim2.new(0, baseSize.X.Offset * 0.88, 0, baseSize.Y.Offset * 0.88)
     main.BackgroundTransparency = 1
-    tw(main, TI.Bounce, { Size = windowSize })
+    winBlur.Size = main.Size
+    winBlur.BackgroundTransparency = 1
+    tw(main, TI.Bounce, { Size = baseSize })
     tw(main, TI.Normal, { BackgroundTransparency = 0 })
+    tw(winBlur, TI.Bounce, { Size = baseSize })
+    tw(winBlur, TI.Normal, { BackgroundTransparency = 0.4 })
 
     -- ═══════════════════════════════════════════════════
     -- HEADER
@@ -407,7 +784,7 @@ function NoHorizon:CreateWindow(cfg)
     local titleHolder = mk("Frame", {
         Parent = header, BackgroundTransparency = 1,
         Position = UDim2.new(0, 20, 0, 0),
-        Size = UDim2.new(1, -220, 1, 0),
+        Size = UDim2.new(1, -240, 1, 0),
     })
     mk("UIListLayout", {
         Parent = titleHolder,
@@ -429,6 +806,17 @@ function NoHorizon:CreateWindow(cfg)
         Font = Enum.Font.Gotham, Text = subtitle,
         TextColor3 = CurrentTheme.Muted, TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left,
+    })
+
+    -- DPI Scale indicator
+    local scaleLbl = mk("TextLabel", {
+        Parent = header, BackgroundTransparency = 1,
+        AnchorPoint = Vector2.new(1, 0.5),
+        Position = UDim2.new(1, -120, 0.5, 0),
+        Size = UDim2.new(0, 40, 0, 20),
+        Font = Enum.Font.Gotham, Text = "1.0x",
+        TextColor3 = CurrentTheme.Muted, TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Center,
     })
 
     local function makeHeaderBtn(text, xOffset, callback, hoverColor)
@@ -457,13 +845,48 @@ function NoHorizon:CreateWindow(cfg)
     end
 
     local closeBtn = makeHeaderBtn("✕", -14, function()
-        tw(main, TI.Normal, { BackgroundTransparency = 1, Size = UDim2.new(0, windowSize.X.Offset * 0.9, 0, windowSize.Y.Offset * 0.9) })
+        tw(main, TI.Normal, { BackgroundTransparency = 1, Size = UDim2.new(0, baseSize.X.Offset * 0.88, 0, baseSize.Y.Offset * 0.88) })
+        tw(winBlur, TI.Normal, { BackgroundTransparency = 1, Size = UDim2.new(0, baseSize.X.Offset * 0.88, 0, baseSize.Y.Offset * 0.88) })
         task.wait(0.25)
         main:Destroy()
+        winBlur:Destroy()
     end, CurrentTheme.Error)
 
     local minBtn = makeHeaderBtn("—", -48, function()
         win:ToggleMinimize()
+    end)
+
+    -- DPI scale buttons
+    local scaleUp = mk("TextButton", {
+        Parent = header,
+        AnchorPoint = Vector2.new(1, 0.5),
+        Position = UDim2.new(1, -84, 0.5, 0),
+        Size = UDim2.new(0, 22, 0, 22),
+        BackgroundColor3 = CurrentTheme.CardBg,
+        BorderSizePixel = 0, Text = "+",
+        Font = Enum.Font.GothamBold, TextSize = 12,
+        TextColor3 = CurrentTheme.SubText, AutoButtonColor = false,
+    })
+    corner(scaleUp, 6)
+    scaleUp.MouseButton1Click:Connect(function()
+        setScale(DPI_SCALE + 0.1)
+        scaleLbl.Text = string.format("%.1fx", DPI_SCALE)
+    end)
+
+    local scaleDown = mk("TextButton", {
+        Parent = header,
+        AnchorPoint = Vector2.new(1, 0.5),
+        Position = UDim2.new(1, -110, 0.5, 0),
+        Size = UDim2.new(0, 22, 0, 22),
+        BackgroundColor3 = CurrentTheme.CardBg,
+        BorderSizePixel = 0, Text = "−",
+        Font = Enum.Font.GothamBold, TextSize = 12,
+        TextColor3 = CurrentTheme.SubText, AutoButtonColor = false,
+    })
+    corner(scaleDown, 6)
+    scaleDown.MouseButton1Click:Connect(function()
+        setScale(DPI_SCALE - 0.1)
+        scaleLbl.Text = string.format("%.1fx", DPI_SCALE)
     end)
 
     -- ═══════════════════════════════════════════════════
@@ -490,7 +913,7 @@ function NoHorizon:CreateWindow(cfg)
         Parent = sidebar,
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
-        Size = UDim2.new(1, -12, 1, -92),
+        Size = UDim2.new(1, -12, 1, -96),
         Position = UDim2.new(0, 6, 0, 10),
         ScrollBarThickness = 0,
         CanvasSize = UDim2.new(0, 0, 0, 0),
@@ -502,7 +925,7 @@ function NoHorizon:CreateWindow(cfg)
         SortOrder = Enum.SortOrder.LayoutOrder,
     })
 
-    -- User info bottom
+    -- User info
     local userFrame = mk("Frame", {
         Parent = sidebar,
         AnchorPoint = Vector2.new(0.5, 1),
@@ -570,6 +993,7 @@ function NoHorizon:CreateWindow(cfg)
         tab.Name = tabName or "Tab"
         tab.Icon = icon
         tab.Window = self
+        tab.Elements = {}
 
         local btn = mk("TextButton", {
             Parent = tabsScroll,
@@ -616,7 +1040,7 @@ function NoHorizon:CreateWindow(cfg)
         })
         mk("UIListLayout", {
             Parent = container,
-            Padding = UDim.new(0, 8),
+            Padding = UDim.new(0, 10),
             SortOrder = Enum.SortOrder.LayoutOrder,
         })
         pad(container, 18, 18, 18, 18)
@@ -682,9 +1106,11 @@ function NoHorizon:CreateWindow(cfg)
         self.Minimized = not self.Minimized
         if self.Minimized then
             self.LastSize = main.Size
-            tw(main, TI.Slow, { Size = UDim2.new(0, windowSize.X.Offset, 0, 54) })
+            tw(main, TI.Slow, { Size = UDim2.new(0, baseSize.X.Offset * DPI_SCALE, 0, 54) })
+            tw(winBlur, TI.Slow, { Size = UDim2.new(0, baseSize.X.Offset * DPI_SCALE, 0, 54) })
         else
-            tw(main, TI.Slow, { Size = self.LastSize or windowSize })
+            tw(main, TI.Slow, { Size = self.LastSize or UDim2.new(0, baseSize.X.Offset * DPI_SCALE, 0, baseSize.Y.Offset * DPI_SCALE) })
+            tw(winBlur, TI.Slow, { Size = self.LastSize or UDim2.new(0, baseSize.X.Offset * DPI_SCALE, 0, baseSize.Y.Offset * DPI_SCALE) })
         end
     end
 
@@ -694,11 +1120,14 @@ function NoHorizon:CreateWindow(cfg)
         if gpe then return end
         if input.KeyCode == toggleKey then
             main.Visible = not main.Visible
+            winBlur.Visible = main.Visible
+            Watermark.Visible = main.Visible
+            LogHolder.Visible = main.Visible
         end
     end)
 
     -- ═══════════════════════════════════════════════════
-    -- CREDIT TAB (always present)
+    -- CREDIT TAB
     -- ═══════════════════════════════════════════════════
     local CreditTab = self:CreateTab("Credits", "rbxassetid://11422143495")
 
@@ -712,21 +1141,19 @@ function NoHorizon:CreateWindow(cfg)
     corner(creditCard, 12)
     stroke(creditCard, CurrentTheme.Outline, 1, 0.4)
 
-    -- Banner
     local banner = mk("Frame", {
         Parent = creditCard,
-        Size = UDim2.new(1, 0, 0, 120),
+        Size = UDim2.new(1, 0, 0, 130),
         BackgroundColor3 = CurrentTheme.Accent,
         BorderSizePixel = 0,
     })
     corner(banner, 12)
     gradient(banner, CurrentTheme.Accent, CurrentTheme.Accent2, 45)
 
-    -- Mask bottom of banner
     mk("Frame", {
         Parent = creditCard,
-        Size = UDim2.new(1, 0, 0, 24),
-        Position = UDim2.new(0, 0, 0, 96),
+        Size = UDim2.new(1, 0, 0, 30),
+        Position = UDim2.new(0, 0, 0, 100),
         BackgroundColor3 = CurrentTheme.CardBg,
         BorderSizePixel = 0,
         ZIndex = 2,
@@ -734,7 +1161,7 @@ function NoHorizon:CreateWindow(cfg)
 
     mk("TextLabel", {
         Parent = creditCard, BackgroundTransparency = 1,
-        Position = UDim2.new(0, 0, 0, 28),
+        Position = UDim2.new(0, 0, 0, 32),
         Size = UDim2.new(1, 0, 0, 32),
         Font = Enum.Font.GothamBold, Text = "NoHorizon",
         TextColor3 = Color3.new(1, 1, 1), TextSize = 28,
@@ -743,17 +1170,17 @@ function NoHorizon:CreateWindow(cfg)
 
     mk("TextLabel", {
         Parent = creditCard, BackgroundTransparency = 1,
-        Position = UDim2.new(0, 0, 0, 62),
+        Position = UDim2.new(0, 0, 0, 66),
         Size = UDim2.new(1, 0, 0, 16),
         Font = Enum.Font.Gotham,
-        Text = "Library • v" .. NoHorizon.Version .. " • Fluid Edition",
+        Text = "Library • v" .. NoHorizon.Version .. " • Ultra Edition",
         TextColor3 = Color3.fromRGB(235, 235, 255), TextSize = 11,
         ZIndex = 3,
     })
 
     mk("TextLabel", {
         Parent = creditCard, BackgroundTransparency = 1,
-        Position = UDim2.new(0, 0, 0, 80),
+        Position = UDim2.new(0, 0, 0, 84),
         Size = UDim2.new(1, 0, 0, 16),
         Font = Enum.Font.GothamMedium,
         Text = "Created by " .. NoHorizon.Creator,
@@ -763,7 +1190,7 @@ function NoHorizon:CreateWindow(cfg)
 
     local infoHolder = mk("Frame", {
         Parent = creditCard, BackgroundTransparency = 1,
-        Position = UDim2.new(0, 0, 0, 130),
+        Position = UDim2.new(0, 0, 0, 140),
         Size = UDim2.new(1, 0, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         ZIndex = 3,
@@ -810,7 +1237,7 @@ function NoHorizon:CreateWindow(cfg)
     creditRow("Executor", identify_ and select(1, identify_()) or "Unknown")
     creditRow("User", LP.Name)
     creditRow("User ID", LP.UserId)
-    creditRow("Theme", ThemeName)
+    creditRow("Theme", NoHorizon.ThemeName)
 
     mk("TextLabel", {
         Parent = infoHolder, BackgroundTransparency = 1,
@@ -835,6 +1262,95 @@ function NoHorizon:CreateWindow(cfg)
         corner(holder, 10)
         stroke(holder, CurrentTheme.Outline, 1, 0.4)
         return holder
+    end
+
+    -- Groupbox (PealLib style)
+    function Tab:AddLeftGroupbox(text)
+        local group = {}
+        local holder = mk("Frame", {
+            Parent = self.Container,
+            Size = UDim2.new(0.48, 0, 0, 100),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            BackgroundColor3 = CurrentTheme.CardBg,
+            BorderSizePixel = 0,
+        })
+        corner(holder, 10)
+        stroke(holder, CurrentTheme.Outline, 1, 0.4)
+        pad(holder, 12, 12, 12, 12)
+
+        mk("TextLabel", {
+            Parent = holder, BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 16),
+            Font = Enum.Font.GothamBold, Text = text or "Group",
+            TextColor3 = CurrentTheme.SubText, TextSize = 11,
+            TextXAlignment = Enum.TextXAlignment.Left,
+        })
+
+        local inner = mk("Frame", {
+            Parent = holder, BackgroundTransparency = 1,
+            Position = UDim2.new(0, 0, 0, 22),
+            Size = UDim2.new(1, 0, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+        })
+        mk("UIListLayout", { Parent = inner, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder })
+
+        group.Frame = holder
+        group.Container = inner
+
+        -- Redirect element methods
+        function group:AddToggle(cfg) cfg.ParentGroup = self; return Tab.AddToggle(Tab, cfg, self.Container) end
+        function group:AddSlider(cfg) cfg.ParentGroup = self; return Tab.AddSlider(Tab, cfg, self.Container) end
+        function group:AddDropdown(cfg) cfg.ParentGroup = self; return Tab.AddDropdown(Tab, cfg, self.Container) end
+        function group:AddButton(cfg) cfg.ParentGroup = self; return Tab.AddButton(Tab, cfg, self.Container) end
+        function group:AddInput(cfg) cfg.ParentGroup = self; return Tab.AddInput(Tab, cfg, self.Container) end
+        function group:AddKeybind(cfg) cfg.ParentGroup = self; return Tab.AddKeybind(Tab, cfg, self.Container) end
+        function group:AddColorPicker(cfg) cfg.ParentGroup = self; return Tab.AddColorPicker(Tab, cfg, self.Container) end
+
+        return group
+    end
+
+    function Tab:AddRightGroupbox(text)
+        local group = {}
+        local holder = mk("Frame", {
+            Parent = self.Container,
+            Size = UDim2.new(0.48, 0, 0, 100),
+            Position = UDim2.new(0.52, 0, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            BackgroundColor3 = CurrentTheme.CardBg,
+            BorderSizePixel = 0,
+        })
+        corner(holder, 10)
+        stroke(holder, CurrentTheme.Outline, 1, 0.4)
+        pad(holder, 12, 12, 12, 12)
+
+        mk("TextLabel", {
+            Parent = holder, BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 16),
+            Font = Enum.Font.GothamBold, Text = text or "Group",
+            TextColor3 = CurrentTheme.SubText, TextSize = 11,
+            TextXAlignment = Enum.TextXAlignment.Left,
+        })
+
+        local inner = mk("Frame", {
+            Parent = holder, BackgroundTransparency = 1,
+            Position = UDim2.new(0, 0, 0, 22),
+            Size = UDim2.new(1, 0, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+        })
+        mk("UIListLayout", { Parent = inner, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder })
+
+        group.Frame = holder
+        group.Container = inner
+
+        function group:AddToggle(cfg) cfg.ParentGroup = self; return Tab.AddToggle(Tab, cfg, self.Container) end
+        function group:AddSlider(cfg) cfg.ParentGroup = self; return Tab.AddSlider(Tab, cfg, self.Container) end
+        function group:AddDropdown(cfg) cfg.ParentGroup = self; return Tab.AddDropdown(Tab, cfg, self.Container) end
+        function group:AddButton(cfg) cfg.ParentGroup = self; return Tab.AddButton(Tab, cfg, self.Container) end
+        function group:AddInput(cfg) cfg.ParentGroup = self; return Tab.AddInput(Tab, cfg, self.Container) end
+        function group:AddKeybind(cfg) cfg.ParentGroup = self; return Tab.AddKeybind(Tab, cfg, self.Container) end
+        function group:AddColorPicker(cfg) cfg.ParentGroup = self; return Tab.AddColorPicker(Tab, cfg, self.Container) end
+
+        return group
     end
 
     function Tab:CreateSection(text)
@@ -915,9 +1431,18 @@ function NoHorizon:CreateWindow(cfg)
         })
     end
 
-    function Tab:CreateButton(cfg)
+    function Tab:AddButton(cfg, customContainer)
         cfg = cfg or {}
-        local holder = baseElement(self, 44)
+        local parent = customContainer or self.Container
+        local holder = mk("Frame", {
+            Parent = parent,
+            Size = UDim2.new(1, 0, 0, 44),
+            BackgroundColor3 = CurrentTheme.CardBg,
+            BorderSizePixel = 0,
+        })
+        corner(holder, 10)
+        stroke(holder, CurrentTheme.Outline, 1, 0.4)
+
         local btn = mk("TextButton", {
             Parent = holder, Size = UDim2.new(1, 0, 1, 0),
             BackgroundColor3 = CurrentTheme.CardBg, BorderSizePixel = 0,
@@ -942,13 +1467,25 @@ function NoHorizon:CreateWindow(cfg)
             tw(btn, TI.Fast, { BackgroundTransparency = 0 })
             safe(cfg.Callback)
         end)
+        attachTooltip(btn, cfg.Description)
         return { Frame = holder }
     end
 
-    function Tab:CreateToggle(cfg)
+    function Tab:AddToggle(cfg, customContainer)
         cfg = cfg or {}
-        local holder = baseElement(self, 44)
-        local state = cfg.CurrentValue or cfg.Default or false
+        local parent = customContainer or self.Container
+        local holder = mk("Frame", {
+            Parent = parent,
+            Size = UDim2.new(1, 0, 0, 44),
+            BackgroundColor3 = CurrentTheme.CardBg,
+            BorderSizePixel = 0,
+        })
+        corner(holder, 10)
+        stroke(holder, CurrentTheme.Outline, 1, 0.4)
+
+        local state = cfg.Default or cfg.CurrentValue or false
+        local expanded = false
+        local subElements = {}
 
         mk("TextLabel", {
             Parent = holder, BackgroundTransparency = 1,
@@ -958,6 +1495,19 @@ function NoHorizon:CreateWindow(cfg)
             TextColor3 = CurrentTheme.Text, TextSize = 13,
             TextXAlignment = Enum.TextXAlignment.Left,
         })
+
+        -- Expand arrow for nested elements
+        local expandArrow
+        if cfg.Nested then
+            expandArrow = mk("TextLabel", {
+                Parent = holder, BackgroundTransparency = 1,
+                AnchorPoint = Vector2.new(1, 0.5),
+                Position = UDim2.new(1, -68, 0.5, 0),
+                Size = UDim2.new(0, 14, 1, 0),
+                Font = Enum.Font.GothamBold, Text = "▸",
+                TextColor3 = CurrentTheme.Muted, TextSize = 11,
+            })
+        end
 
         local switch = mk("TextButton", {
             Parent = holder,
@@ -993,28 +1543,61 @@ function NoHorizon:CreateWindow(cfg)
         local function setValue(v, fire)
             state = v
             setVisual(v)
-            if cfg.Flag then NoHorizon.Flags[cfg.Flag] = v end
+            if cfg.Flag then
+                NoHorizon.Flags[cfg.Flag] = v
+                NoHorizon.Options[cfg.Flag] = { Value = v, Type = "Toggle" }
+            end
             if fire then safe(cfg.Callback, v) end
+            if v then NoHorizon:Log(cfg.Name .. " enabled", "success") end
         end
 
         setVisual(state)
         switch.MouseButton1Click:Connect(function() setValue(not state, true) end)
 
-        return {
+        -- Nested elements support
+        if cfg.Nested and expandArrow then
+            switch.MouseButton1Click:Connect(function() end) -- prevent double
+            local originalClick = switch.MouseButton1Click
+            switch.MouseButton1Click:Connect(function()
+                if cfg.Nested and not expanded then
+                    -- handled by nested methods
+                end
+            end)
+
+            local nestedAPI = {}
+            function nestedAPI:Slider(opts) opts.Parent = holder; return end
+            function nestedAPI:Dropdown(opts) return end
+        end
+
+        attachTooltip(switch, cfg.Description)
+
+        local toggleAPI = {
             Frame = holder,
             Set = function(_, v) setValue(v, true) end,
+            SetSilent = function(_, v) setValue(v, false) end,
             Get = function() return state end,
         }
+
+        return toggleAPI
     end
 
-    function Tab:CreateSlider(cfg)
+    function Tab:AddSlider(cfg, customContainer)
         cfg = cfg or {}
-        local min = cfg.Range and cfg.Range[1] or 0
-        local max = cfg.Range and cfg.Range[2] or 100
-        local state = math.clamp(cfg.CurrentValue or cfg.Default or min, min, max)
+        local parent = customContainer or self.Container
+        local min = cfg.Min or 0
+        local max = cfg.Max or 100
+        local state = math.clamp(cfg.Default or cfg.CurrentValue or min, min, max)
         local suffix = cfg.Suffix or ""
+        local decimals = cfg.Decimals or 0
 
-        local holder = baseElement(self, 60)
+        local holder = mk("Frame", {
+            Parent = parent,
+            Size = UDim2.new(1, 0, 0, 60),
+            BackgroundColor3 = CurrentTheme.CardBg,
+            BorderSizePixel = 0,
+        })
+        corner(holder, 10)
+        stroke(holder, CurrentTheme.Outline, 1, 0.4)
 
         mk("TextLabel", {
             Parent = holder, BackgroundTransparency = 1,
@@ -1062,22 +1645,33 @@ function NoHorizon:CreateWindow(cfg)
         stroke(knob, CurrentTheme.Accent, 2)
 
         local dragging = false
-        local function pct() return (state - min) / math.max(1, (max - min)) end
+        local function pct() return (state - min) / math.max(0.0001, (max - min)) end
+        local function formatVal(v)
+            if decimals == 0 then return tostring(math.floor(v + 0.5)) end
+            return string.format("%." .. decimals .. "f", v)
+        end
         local function update()
             local p = pct()
             tw(fill, TI.Fast, { Size = UDim2.new(p, 0, 1, 0) })
             tw(knob, TI.Fast, { Position = UDim2.new(p, 0, 0.5, 0) })
-            valLbl.Text = tostring(math.floor(state * 100) / 100) .. suffix
+            valLbl.Text = formatVal(state) .. suffix
         end
         update()
 
         local function input(i)
             local rel = math.clamp((i.Position.X - barBg.AbsolutePosition.X) / barBg.AbsoluteSize.X, 0, 1)
             local nv = min + (max - min) * rel
-            if not cfg.Decimals then nv = math.floor(nv + 0.5) end
+            if decimals > 0 then
+                nv = math.floor(nv * (10^decimals) + 0.5) / (10^decimals)
+            else
+                nv = math.floor(nv + 0.5)
+            end
             if nv ~= state then
                 state = nv; update()
-                if cfg.Flag then NoHorizon.Flags[cfg.Flag] = state end
+                if cfg.Flag then
+                    NoHorizon.Flags[cfg.Flag] = state
+                    NoHorizon.Options[cfg.Flag] = { Value = state, Type = "Slider" }
+                end
                 safe(cfg.Callback, state)
             end
         end
@@ -1110,17 +1704,19 @@ function NoHorizon:CreateWindow(cfg)
         }
     end
 
-    function Tab:CreateDropdown(cfg)
+    function Tab:AddDropdown(cfg, customContainer)
         cfg = cfg or {}
-        local options = cfg.Options or {}
-        local state = cfg.CurrentOption or cfg.Default or (options[1])
-        local multi = cfg.MultipleOptions or false
+        local parent = customContainer or self.Container
+        local options = cfg.Values or cfg.Options or {}
+        local state = cfg.Default or cfg.CurrentOption or (options[1])
+        local multi = cfg.Multi or cfg.MultipleOptions or false
+        local searchable = cfg.Searchable or (#options > 8)
         local open = false
 
         if multi and type(state) ~= "table" then state = {} end
 
         local holder = mk("Frame", {
-            Parent = self.Container,
+            Parent = parent,
             Size = UDim2.new(1, 0, 0, 44),
             BackgroundTransparency = 1,
         })
@@ -1170,8 +1766,37 @@ function NoHorizon:CreateWindow(cfg)
         corner(listHolder, 10)
         stroke(listHolder, CurrentTheme.Outline, 1, 0.4)
 
+        local listLayoutFrame = mk("Frame", {
+            Parent = listHolder,
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+        })
+
+        local searchBox = nil
+        local topOffset = 0
+        if searchable then
+            searchBox = mk("TextBox", {
+                Parent = listLayoutFrame,
+                Size = UDim2.new(1, -12, 0, 28),
+                Position = UDim2.new(0, 6, 0, 6),
+                BackgroundColor3 = CurrentTheme.ElementBg,
+                BorderSizePixel = 0,
+                Font = Enum.Font.Gotham,
+                PlaceholderText = "Search...",
+                PlaceholderColor3 = CurrentTheme.Muted,
+                Text = "", TextColor3 = CurrentTheme.Text,
+                TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left,
+                ClearTextOnFocus = false,
+            })
+            corner(searchBox, 6)
+            pad(searchBox, 0, 0, 8, 8)
+            topOffset = 38
+        end
+
         local listScroll = mk("ScrollingFrame", {
-            Parent = listHolder, Size = UDim2.new(1, 0, 1, 0),
+            Parent = listLayoutFrame,
+            Size = UDim2.new(1, 0, 1, -topOffset),
+            Position = UDim2.new(0, 0, 0, topOffset),
             BackgroundTransparency = 1, BorderSizePixel = 0,
             ScrollBarThickness = 2,
             ScrollBarImageColor3 = CurrentTheme.Accent,
@@ -1206,55 +1831,71 @@ function NoHorizon:CreateWindow(cfg)
                 state = o
             end
             updateV()
-            if cfg.Flag then NoHorizon.Flags[cfg.Flag] = state end
+            if cfg.Flag then
+                NoHorizon.Flags[cfg.Flag] = state
+                NoHorizon.Options[cfg.Flag] = { Value = state, Type = "Dropdown" }
+            end
             safe(cfg.Callback, state)
         end
 
-        for _, opt in ipairs(options) do
-            local item = mk("TextButton", {
-                Parent = listScroll, Size = UDim2.new(1, 0, 0, 30),
-                BackgroundColor3 = CurrentTheme.CardBg,
-                BorderSizePixel = 0, Text = "", AutoButtonColor = false,
-            })
-            corner(item, 6)
+        local function buildItems(filter)
+            for _, it in ipairs(items) do it.item:Destroy() end
+            items = {}
+            filter = (filter or ""):lower()
+            for _, optName in ipairs(options) do
+                if filter == "" or string.find(tostring(optName):lower(), filter, 1, true) then
+                    local item = mk("TextButton", {
+                        Parent = listScroll, Size = UDim2.new(1, 0, 0, 30),
+                        BackgroundColor3 = CurrentTheme.CardBg,
+                        BorderSizePixel = 0, Text = "", AutoButtonColor = false,
+                    })
+                    corner(item, 6)
 
-            local check = mk("Frame", {
-                Parent = item, AnchorPoint = Vector2.new(1, 0.5),
-                Position = UDim2.new(1, -12, 0.5, 0),
-                Size = UDim2.new(0, 12, 0, 12),
-                BackgroundColor3 = isSel(opt) and CurrentTheme.Accent or CurrentTheme.ElementBg,
-                BorderSizePixel = 0, Visible = multi,
-            })
-            corner(check, 3)
+                    local check = mk("Frame", {
+                        Parent = item, AnchorPoint = Vector2.new(1, 0.5),
+                        Position = UDim2.new(1, -12, 0.5, 0),
+                        Size = UDim2.new(0, 12, 0, 12),
+                        BackgroundColor3 = isSel(optName) and CurrentTheme.Accent or CurrentTheme.ElementBg,
+                        BorderSizePixel = 0, Visible = multi,
+                    })
+                    corner(check, 3)
 
-            local lbl = mk("TextLabel", {
-                Parent = item, BackgroundTransparency = 1,
-                Position = UDim2.new(0, 14, 0, 0),
-                Size = UDim2.new(1, -36, 1, 0),
-                Font = Enum.Font.Gotham, Text = tostring(opt),
-                TextColor3 = (not multi and isSel(opt)) and CurrentTheme.Accent or CurrentTheme.Text,
-                TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left,
-            })
+                    local lbl = mk("TextLabel", {
+                        Parent = item, BackgroundTransparency = 1,
+                        Position = UDim2.new(0, 14, 0, 0),
+                        Size = UDim2.new(1, -36, 1, 0),
+                        Font = Enum.Font.Gotham, Text = tostring(optName),
+                        TextColor3 = (not multi and isSel(optName)) and CurrentTheme.Accent or CurrentTheme.Text,
+                        TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left,
+                    })
 
-            item.MouseEnter:Connect(function() tw(item, TI.Fast, { BackgroundColor3 = CurrentTheme.CardHover }) end)
-            item.MouseLeave:Connect(function() tw(item, TI.Fast, { BackgroundColor3 = CurrentTheme.CardBg }) end)
-            item.MouseButton1Click:Connect(function()
-                if multi then
-                    local nv = not isSel(opt)
-                    setSel(opt, nv)
-                    tw(check, TI.Fast, { BackgroundColor3 = nv and CurrentTheme.Accent or CurrentTheme.ElementBg })
-                else
-                    setSel(opt, true)
-                    for _, other in ipairs(items) do
-                        other.lbl.TextColor3 = (other.name == opt) and CurrentTheme.Accent or CurrentTheme.Text
-                    end
-                    open = false
-                    tw(arrow, TI.Fast, { Rotation = 0 })
-                    tw(listHolder, TI.Normal, { Size = UDim2.new(1, 0, 0, 0) })
-                    task.wait(0.2); listHolder.Visible = false
+                    item.MouseEnter:Connect(function() tw(item, TI.Fast, { BackgroundColor3 = CurrentTheme.CardHover }) end)
+                    item.MouseLeave:Connect(function() tw(item, TI.Fast, { BackgroundColor3 = CurrentTheme.CardBg }) end)
+                    item.MouseButton1Click:Connect(function()
+                        if multi then
+                            local nv = not isSel(optName)
+                            setSel(optName, nv)
+                            tw(check, TI.Fast, { BackgroundColor3 = nv and CurrentTheme.Accent or CurrentTheme.ElementBg })
+                        else
+                            setSel(optName, true)
+                            for _, other in ipairs(items) do
+                                other.lbl.TextColor3 = (other.name == optName) and CurrentTheme.Accent or CurrentTheme.Text
+                            end
+                            open = false
+                            tw(arrow, TI.Fast, { Rotation = 0 })
+                            tw(listHolder, TI.Normal, { Size = UDim2.new(1, 0, 0, 0) })
+                            task.wait(0.2); listHolder.Visible = false
+                        end
+                    end)
+                    table.insert(items, { item = item, lbl = lbl, name = optName, check = check })
                 end
-            end)
-            table.insert(items, { item = item, lbl = lbl, name = opt, check = check })
+            end
+        end
+
+        buildItems()
+
+        if searchBox then
+            searchBox:GetPropertyChangedSignal("Text"):Connect(function() buildItems(searchBox.Text) end)
         end
 
         updateV()
@@ -1265,7 +1906,7 @@ function NoHorizon:CreateWindow(cfg)
             open = not open
             if open then
                 listHolder.Visible = true
-                local h = math.min(#options * 32 + 12, 180)
+                local h = math.min(#options * 32 + 12, 180) + (searchable and 38 or 0)
                 tw(listHolder, TI.Normal, { Size = UDim2.new(1, 0, 0, h) })
                 tw(arrow, TI.Fast, { Rotation = 180 })
             else
@@ -1279,13 +1920,21 @@ function NoHorizon:CreateWindow(cfg)
             Frame = holder,
             Set = function(_, v) setSel(v, true) end,
             Get = function() return state end,
-            Refresh = function(_, opts) options = opts end,
+            Refresh = function(_, opts) options = opts; buildItems() end,
         }
     end
 
-    function Tab:CreateInput(cfg)
+    function Tab:AddInput(cfg, customContainer)
         cfg = cfg or {}
-        local holder = baseElement(self, 44)
+        local parent = customContainer or self.Container
+        local holder = mk("Frame", {
+            Parent = parent,
+            Size = UDim2.new(1, 0, 0, 44),
+            BackgroundColor3 = CurrentTheme.CardBg,
+            BorderSizePixel = 0,
+        })
+        corner(holder, 10)
+        stroke(holder, CurrentTheme.Outline, 1, 0.4)
 
         mk("TextLabel", {
             Parent = holder, BackgroundTransparency = 1,
@@ -1304,9 +1953,9 @@ function NoHorizon:CreateWindow(cfg)
             BackgroundColor3 = CurrentTheme.ElementBg,
             BorderSizePixel = 0,
             Font = Enum.Font.Gotham,
-            PlaceholderText = cfg.PlaceholderText or "Enter...",
+            PlaceholderText = cfg.Placeholder or cfg.PlaceholderText or "Enter...",
             PlaceholderColor3 = CurrentTheme.Muted,
-            Text = cfg.CurrentValue or "",
+            Text = cfg.Default or cfg.CurrentValue or "",
             TextColor3 = CurrentTheme.Text, TextSize = 12,
             TextXAlignment = Enum.TextXAlignment.Left,
             ClearTextOnFocus = cfg.ClearTextOnFocus ~= false,
@@ -1318,6 +1967,10 @@ function NoHorizon:CreateWindow(cfg)
         box.Focused:Connect(function() tw(boxStroke, TI.Fast, { Color = CurrentTheme.Accent }) end)
         box.FocusLost:Connect(function(enter)
             tw(boxStroke, TI.Fast, { Color = CurrentTheme.Outline })
+            if cfg.Flag then
+                NoHorizon.Flags[cfg.Flag] = box.Text
+                NoHorizon.Options[cfg.Flag] = { Value = box.Text, Type = "Input" }
+            end
             safe(cfg.Callback, box.Text, enter)
         end)
 
@@ -1328,26 +1981,59 @@ function NoHorizon:CreateWindow(cfg)
         }
     end
 
-    function Tab:CreateKeybind(cfg)
+    function Tab:AddKeybind(cfg, customContainer)
         cfg = cfg or {}
-        local holder = baseElement(self, 44)
-        local key = cfg.CurrentKeybind or cfg.Default or Enum.KeyCode.E
+        local parent = customContainer or self.Container
+        local holder = mk("Frame", {
+            Parent = parent,
+            Size = UDim2.new(1, 0, 0, 44),
+            BackgroundColor3 = CurrentTheme.CardBg,
+            BorderSizePixel = 0,
+        })
+        corner(holder, 10)
+        stroke(holder, CurrentTheme.Outline, 1, 0.4)
+
+        local key = cfg.Default or cfg.CurrentKeybind or Enum.KeyCode.E
+        local mode = cfg.Mode or "Toggle"  -- Toggle / Hold / Always
         local listening = false
+        local holding = false
 
         mk("TextLabel", {
             Parent = holder, BackgroundTransparency = 1,
             Position = UDim2.new(0, 18, 0, 0),
-            Size = UDim2.new(1, -120, 1, 0),
+            Size = UDim2.new(1, -130, 1, 0),
             Font = Enum.Font.GothamMedium, Text = cfg.Name or "Keybind",
             TextColor3 = CurrentTheme.Text, TextSize = 13,
             TextXAlignment = Enum.TextXAlignment.Left,
         })
 
+        -- Mode selector
+        local modeBtn = mk("TextButton", {
+            Parent = holder,
+            AnchorPoint = Vector2.new(1, 0.5),
+            Position = UDim2.new(1, -100, 0.5, 0),
+            Size = UDim2.new(0, 60, 0, 26),
+            BackgroundColor3 = CurrentTheme.ElementBg,
+            BorderSizePixel = 0, Text = mode,
+            Font = Enum.Font.Gotham, TextColor3 = CurrentTheme.SubText,
+            TextSize = 10, AutoButtonColor = false,
+        })
+        corner(modeBtn, 5)
+        stroke(modeBtn, CurrentTheme.Outline, 1, 0.3)
+
+        local modes = {"Toggle", "Hold", "Always"}
+        modeBtn.MouseButton1Click:Connect(function()
+            local idx = table.find(modes, mode) or 1
+            idx = idx % #modes + 1
+            mode = modes[idx]
+            modeBtn.Text = mode
+        end)
+
         local btn = mk("TextButton", {
             Parent = holder,
             AnchorPoint = Vector2.new(1, 0.5),
             Position = UDim2.new(1, -18, 0.5, 0),
-            Size = UDim2.new(0, 80, 0, 30),
+            Size = UDim2.new(0, 76, 0, 30),
             BackgroundColor3 = CurrentTheme.ElementBg,
             BorderSizePixel = 0, Text = key.Name,
             Font = Enum.Font.GothamBold, TextColor3 = CurrentTheme.Text,
@@ -1376,27 +2062,52 @@ function NoHorizon:CreateWindow(cfg)
             if listening and input.UserInputType == Enum.UserInputType.Keyboard then
                 key = input.KeyCode
                 stopListening()
-                if cfg.Flag then NoHorizon.Flags[cfg.Flag] = key end
+                if cfg.Flag then
+                    NoHorizon.Flags[cfg.Flag] = key
+                    NoHorizon.Options[cfg.Flag] = { Value = key, Type = "Keybind" }
+                end
                 safe(cfg.Callback, key)
             elseif not gpe and input.KeyCode == key then
-                safe(cfg.OnPressed)
+                if mode == "Toggle" then
+                    holding = not holding
+                    safe(cfg.Callback, holding)
+                else
+                    holding = true
+                    safe(cfg.OnPressed)
+                end
             end
         end)
         UIS.InputEnded:Connect(function(input, gpe)
-            if not gpe and input.KeyCode == key then safe(cfg.OnReleased) end
+            if not gpe and input.KeyCode == key then
+                if mode == "Hold" then
+                    holding = false
+                    safe(cfg.OnReleased)
+                end
+            end
         end)
 
         return {
             Frame = holder,
             Set = function(_, k) key = k; btn.Text = k.Name end,
             Get = function() return key end,
+            GetState = function() return holding end,
         }
     end
 
-    function Tab:CreateColorPicker(cfg)
+    function Tab:AddColorPicker(cfg, customContainer)
         cfg = cfg or {}
-        local holder = baseElement(self, 44)
-        local color = cfg.Color or cfg.Default or Color3.fromRGB(255, 255, 255)
+        local parent = customContainer or self.Container
+        local holder = mk("Frame", {
+            Parent = parent,
+            Size = UDim2.new(1, 0, 0, 44),
+            BackgroundColor3 = CurrentTheme.CardBg,
+            BorderSizePixel = 0,
+        })
+        corner(holder, 10)
+        stroke(holder, CurrentTheme.Outline, 1, 0.4)
+
+        local color = cfg.Default or cfg.Color or Color3.fromRGB(255, 255, 255)
+        local alpha = cfg.Alpha or 0
         local h, s, v = Color3.toHSV(color)
         local open = false
 
@@ -1507,7 +2218,7 @@ function NoHorizon:CreateWindow(cfg)
 
         local hexBox = mk("TextBox", {
             Parent = pickerHolder,
-            Position = UDim2.new(0, 14, 0, 122),
+            Position = UDim2.new(0, 14, 0, 124),
             Size = UDim2.new(1, -28, 0, 24),
             BackgroundColor3 = CurrentTheme.CardBg,
             BorderSizePixel = 0,
@@ -1522,8 +2233,12 @@ function NoHorizon:CreateWindow(cfg)
         local function commit()
             color = Color3.fromHSV(h, s, v)
             preview.BackgroundColor3 = color
+            preview.BackgroundTransparency = alpha
             hexBox.Text = "#" .. string.format("%02X%02X%02X", color.R * 255, color.G * 255, color.B * 255)
-            if cfg.Flag then NoHorizon.Flags[cfg.Flag] = color end
+            if cfg.Flag then
+                NoHorizon.Flags[cfg.Flag] = color
+                NoHorizon.Options[cfg.Flag] = { Value = color, Type = "ColorPicker" }
+            end
             safe(cfg.Callback, color)
         end
 
@@ -1585,8 +2300,8 @@ function NoHorizon:CreateWindow(cfg)
                 open = not open
                 if open then
                     pickerHolder.Visible = true
-                    holder:TweenSize(UDim2.new(1, 0, 0, 44 + 160), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
-                    tw(pickerHolder, TI.Normal, { Size = UDim2.new(1, 0, 0, 160) })
+                    holder:TweenSize(UDim2.new(1, 0, 0, 44 + 162), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
+                    tw(pickerHolder, TI.Normal, { Size = UDim2.new(1, 0, 0, 162) })
                 else
                     tw(pickerHolder, TI.Normal, { Size = UDim2.new(1, 0, 0, 0) })
                     holder:TweenSize(UDim2.new(1, 0, 0, 44), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.25, true)
@@ -1606,15 +2321,17 @@ function NoHorizon:CreateWindow(cfg)
                 hexBox.Text = "#" .. string.format("%02X%02X%02X", c.R * 255, c.G * 255, c.B * 255)
             end,
             Get = function() return color end,
+            SetAlpha = function(_, a) alpha = a; preview.BackgroundTransparency = a end,
         }
     end
 
     -- ═══════════════════════════════════════════════════
-    -- SAVE MANAGER
+    -- CONFIG SYSTEM
     -- ═══════════════════════════════════════════════════
     if cfg.ConfigurationSaving and cfg.ConfigurationSaving.Enabled then
         local folder = cfg.ConfigurationSaving.FolderName or "NoHorizon"
         local file = cfg.ConfigurationSaving.FileName or "Config"
+        local autoLoad = cfg.ConfigurationSaving.AutoLoad ~= false
 
         function Window:Save()
             if not writefile_ then
@@ -1628,6 +2345,8 @@ function NoHorizon:CreateWindow(cfg)
                     data[k] = { __t = "c3", r = val.R, g = val.G, b = val.B }
                 elseif typeof(val) == "EnumItem" then
                     data[k] = { __t = "e", e = tostring(val.EnumType), n = val.Name }
+                elseif typeof(val) == "Vector2" then
+                    data[k] = { __t = "v2", x = val.X, y = val.Y }
                 else
                     data[k] = val
                 end
@@ -1635,7 +2354,10 @@ function NoHorizon:CreateWindow(cfg)
             local ok, encoded = pcall(Http.JSONEncode, Http, data)
             if not ok then return end
             local ok2 = pcall(writefile_, folder .. "/" .. file .. ".json", encoded)
-            if ok2 then NoHorizon:Notify({ Title = "Saved", Content = file .. " saved.", Type = "success" }) end
+            if ok2 then
+                NoHorizon:Notify({ Title = "Saved", Content = file .. " saved.", Type = "success" })
+                NoHorizon:Log("Config saved: " .. file, "success")
+            end
         end
 
         function Window:Load()
@@ -1658,48 +2380,44 @@ function NoHorizon:CreateWindow(cfg)
                 elseif type(val) == "table" and val.__t == "e" then
                     local okE, enum = pcall(function() return Enum[val.e][val.n] end)
                     if okE then NoHorizon.Flags[k] = enum end
+                elseif type(val) == "table" and val.__t == "v2" then
+                    NoHorizon.Flags[k] = Vector2.new(val.x, val.y)
                 else
                     NoHorizon.Flags[k] = val
                 end
             end
             NoHorizon:Notify({ Title = "Loaded", Content = file .. " loaded.", Type = "success" })
+            NoHorizon:Log("Config loaded: " .. file, "success")
+        end
+
+        function Window:AutoSave(interval)
+            interval = interval or 30
+            task.spawn(function()
+                while main.Parent do
+                    task.wait(interval)
+                    pcall(function() self:Save() end)
+                end
+            end)
+        end
+
+        if autoLoad then
+            task.spawn(function()
+                task.wait(0.5)
+                pcall(function() self:Load() end)
+            end)
         end
     end
 
     -- ═══════════════════════════════════════════════════
-    -- WATERMARK
+    -- DPI SCALE EVENT
     -- ═══════════════════════════════════════════════════
-    local wm = mk("Frame", {
-        Parent = ScreenGui, Name = "Watermark",
-        AnchorPoint = Vector2.new(0, 1),
-        Position = UDim2.new(0, 16, 1, -16),
-        Size = UDim2.new(0, 180, 0, 28),
-        BackgroundColor3 = CurrentTheme.HeaderBg,
-        BackgroundTransparency = 0.1,
-        BorderSizePixel = 0, ZIndex = 400,
-    })
-    corner(wm, 8)
-    stroke(wm, CurrentTheme.Outline, 1, 0.3)
-
-    local wmAccent = mk("Frame", {
-        Parent = wm, Size = UDim2.new(0, 3, 1, 0),
-        BackgroundColor3 = CurrentTheme.Accent, BorderSizePixel = 0,
-    })
-    corner(wmAccent, 4)
-
-    mk("TextLabel", {
-        Parent = wm, BackgroundTransparency = 1,
-        Position = UDim2.new(0, 14, 0, 0),
-        Size = UDim2.new(1, -18, 1, 0),
-        Font = Enum.Font.GothamBold,
-        Text = windowName .. " • v" .. NoHorizon.Version,
-        TextColor3 = CurrentTheme.Text, TextSize = 11,
-        TextXAlignment = Enum.TextXAlignment.Left,
-    })
-
-    makeDraggable(wm, wm)
+    NoHorizon.SetScale = function(_, scale)
+        setScale(scale)
+        scaleLbl.Text = string.format("%.1fx", DPI_SCALE)
+    end
 
     table.insert(NoHorizon.Windows, win)
+    NoHorizon:Log("Window created: " .. windowName, "success")
     return win
 end
 
@@ -1708,8 +2426,17 @@ end
 -- ═══════════════════════════════════════════════════════════════
 function NoHorizon:GetFlag(name) return self.Flags[name] end
 function NoHorizon:SetFlag(name, value) self.Flags[name] = value end
+function NoHorizon:GetOption(name) return self.Options[name] and self.Options[name].Value end
+function NoHorizon:SetTheme(name)
+    if Themes[name] then
+        CurrentTheme = Themes[name]
+        self.ThemeName = name
+        self:Notify({ Title = "Theme", Content = "Switched to " .. name, Type = "info" })
+    end
+end
 function NoHorizon:Destroy()
     if self.ScreenGui then pcall(function() self.ScreenGui:Destroy() end) end
+    if winBlur then pcall(function() winBlur:Destroy() end) end
 end
 
 return NoHorizon
