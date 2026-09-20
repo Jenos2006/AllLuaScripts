@@ -3,8 +3,6 @@
 ║                 NoHorizon Library  v3.0.0                         ║
 ║                 Rayfield-Style • Executor Edition                 ║
 ║                 Creator: NoHorizon                                ║
-╠═══════════════════════════════════════════════════════════════════╣
-║   local NoHorizon = loadstring(game:HttpGet("URL"))()            ║
 ╚═══════════════════════════════════════════════════════════════════╝
 ]]
 
